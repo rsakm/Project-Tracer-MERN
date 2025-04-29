@@ -1,40 +1,102 @@
 import { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import api from "../utils/api";
+import Logo from "../components/Logo";
 
 function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
+    setIsLoading(true);
+    
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", form);
+      const res = await api.post("/auth/login", form);
       localStorage.setItem("token", res.data.token);
-      alert("Login successful!");
       navigate("/dashboard");
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg shadow-lg w-80 space-y-4">
-        <h2 className="text-xl font-bold">Login</h2>
-        <input type="email" placeholder="Email" className="w-full px-3 py-2 border rounded"
-          value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-        <input type="password" placeholder="Password" className="w-full px-3 py-2 border rounded"
-          value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
-        <button className="bg-green-600 text-white w-full py-2 rounded hover:bg-green-700">Login</button>
-       
-<p className="text-sm mt-2 text-center">
-  Don’t have an account? <Link to="/signup" className="text-blue-600 hover:underline">Sign up</Link>
-</p>
-
-      </form>
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-50 px-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <Logo size="large" />
+          <h1 className="mt-4 text-3xl font-bold text-gray-800">Task Tracker</h1>
+          <p className="mt-2 text-gray-600">Sign in to your account</p>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
+          {error && (
+            <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+              />
+            </div>
+            
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+              </div>
+              <input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+              />
+            </div>
+            
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                isLoading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+            >
+              {isLoading ? "Signing in..." : "Sign in"}
+            </button>
+            
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Don't have an account?{" "}
+                <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+                  Sign up
+                </Link>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
+
 export default Login;
